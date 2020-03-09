@@ -14,7 +14,7 @@ PROCESSES=$2
 TEMPLATES=$3
 OUTPUT=$4
 
-python WikiExtractor.py $INPUT \
+python ../WikiExtractor.py $INPUT \
        --json \
        --processes $PROCESSES \
        --templates $TEMPLATES \
@@ -24,6 +24,5 @@ python WikiExtractor.py $INPUT \
        --links \
        --sections \
        --lists \
-       --keep_tables \
        --min_text_length 0 \
        --filter_disambig_pages

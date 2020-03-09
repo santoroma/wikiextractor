@@ -91,3 +91,4 @@ ENV/
 
 # Editor files
 *.idea
+.Rproj.user
