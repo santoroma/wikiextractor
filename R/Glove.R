@@ -3,10 +3,14 @@ library(quanteda)
 library(jsonlite)
 library(text2vec)
 
-wiki <- stream_in(file("test/Dump_Text.xml")) %>% as_tibble()
+wiki <- stream_in(file("data/Dump_Text.xml")) %>% as_tibble()
 
 text_clean.f <- function(text){
-  text <- text %>% xml2::read_html() %>% rvest::html_text()
+  pp <- try(text %>% xml2::read_html() %>% rvest::html_text(), silent = TRUE)
+  if (!class(pp) =="try-error"){
+    text <- pp
+    rm(pp)
+  }
   Stop <- c(rcorpora::corpora(glue::glue("words/stopwords/it"))$stopWords,
             stopwords::stopwords(language = "it"),
             stopwords::stopwords(language = "it", source = "stopwords-iso"),
@@ -21,15 +25,16 @@ text_clean.f <- function(text){
   text <- text %>% str_replace_all("[#_?]+|@[@]+", "") %>%
     str_replace_all("['’]", " ") %>% str_replace_all("-\n", "") %>% char_tolower() %>%
     quanteda::tokens(remove_url = TRUE, remove_punct = TRUE, remove_symbols = TRUE,
-                     remove_separators = TRUE, split_hyphens = TRUE, remove_numbers = TRUE)
+                     remove_separators = TRUE, remove_hyphens = TRUE, remove_numbers = TRUE)
   text <- tokens_remove(text, Stop)
-  
-  
+  text <- text %>% stringi::stri_c(collapse = " ")
+  return(text)
 }
 
 wiki <- wiki %>% 
   mutate(text = map_chr(text,
-                        .f = )
+                        .f = text_clean.f))
+save(wiki, file = "wiki_processed.RData")
 wiki <- wiki %>% select(text) %>% unlist(use.names = FALSE)
 tokens <- space_tokenizer(wiki)
 it <- itoken_parallel(tokens)
