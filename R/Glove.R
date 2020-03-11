@@ -7,7 +7,7 @@ wiki <- stream_in(file("data/Dump_Text.xml")) %>% as_tibble()
 
 text_clean.f <- function(text){
   pp <- try(text %>% xml2::read_html() %>% rvest::html_text(), silent = TRUE)
-  if (!class(pp) =="try-error"){
+  if (!class(pp) == "try-error") {
     text <- pp
     rm(pp)
   }
@@ -35,14 +35,33 @@ wiki <- wiki %>%
   mutate(text = map_chr(text,
                         .f = text_clean.f))
 save(wiki, file = "wiki_processed.RData")
+load("data/wiki_processed.RData")
 wiki <- wiki %>% select(text) %>% unlist(use.names = FALSE)
 tokens <- space_tokenizer(wiki)
 it <- itoken_parallel(tokens)
+rm(wiki)
+#rm(tokens)
 vocab <- create_vocabulary(it)
-vocab <- prune_vocabulary(vocab, term_count_min = 5L)
+save(vocab,file = "data/vocab.RData")
+load("data/vocab.RData")
+vocab <- prune_vocabulary(vocab, term_count_min = 5L,
+                          vocab_term_max = 9e4)
+save(vocab,file = "data/vocab_pruned.RData")
 # Use our filtered vocabulary
 vectorizer <- vocab_vectorizer(vocab)
 # use window of 5 for context words
+save.image("Before_tcm.RData")
 tcm <- create_tcm(it, vectorizer, skip_grams_window = 5L)
+###quanteda approach
+load("data/wiki_processed.RData")
+qunateda
+wiki <- corpus(wiki,docid_field = "id", text_field = "text")
+save(wiki, file = "data/wiki_as_corpus.RData")
+wiki <- fcm(wiki, 
+            context = "window", 
+            count = "frequency", 
+            window = 5L
+            )
+
 glove = GlobalVectors$new(rank = 50, x_max = 10)
 glove$fit(tcm, n_iter = 20)
